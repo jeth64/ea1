@@ -7,7 +7,8 @@
 typedef std::vector<int> Vector;
 typedef std::map< int, Vector > Map;
 
-void print_cc(std::vector< Vector > mat){
+void print_cc(std::vector< Vector > mat)
+{
   int i,j,n, m;
 
   n = (int) mat.size();
@@ -87,13 +88,7 @@ Map invert(Map m)
     k = (*it).first;
     v = (*it).second;
     for( itv = v.begin(); itv != v.end(); ++itv ) {
-      if ( res.count(*itv) == 0) {
-        res.insert(std::pair<int, Vector>(*itv, Vector()));
-        res[*itv].push_back(k);
-      }
-      else {
-        res[*itv].push_back(k);
-      }
+      res[*itv].push_back(k);
     }
   }
   return res;
