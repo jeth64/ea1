@@ -5,10 +5,11 @@
 #include <sys/timeb.h>
 
 typedef std::vector<int> Vector;
-typedef std::map< int, std::vector<int> > Map;
+typedef std::map< int, Vector > Map;
 
-void print_cc(std::vector< std::vector<int> > mat){
+void print_cc(std::vector< Vector > mat){
   int i,j,n, m;
+
   n = (int) mat.size();
   for ( i = 0; i < n; ++i ) {
     m = (int) mat[i].size();
@@ -21,7 +22,9 @@ void print_cc(std::vector< std::vector<int> > mat){
 
 void print_vector(Vector v)
 {
-  for( Vector::iterator it = v.begin(); it!=v.end(); ++it ) {
+  Vector::iterator it;
+
+  for( it = v.begin(); it!=v.end(); ++it ) {
     printf("%d ", *it);
   }
 }
@@ -31,6 +34,7 @@ void print_map(Map m)
   Vector v;
   Map::iterator it;
   Vector::iterator itv;
+
   for( it = m.begin(); it != m.end(); ++it ) {
     printf("%d:", (*it).first);
     v = (*it).second;
@@ -45,10 +49,10 @@ Map read_graph(char* filename)
 {
   FILE *file;
   Map graph;
+  int n, i, j, k;
 
   file = fopen(filename, "r");
   if (file) {
-    int n, i, j, k;
     fscanf(file, "%d", &n);
 
     for( k = 0; k < n; ++k ) {
@@ -95,19 +99,19 @@ Map invert(Map m)
   return res;
 }
 
-Vector dfs(Map graph, int root, Vector exclude = Vector() )
+Vector dfs(Map graph, int root, Vector exclude = Vector())
 {
   Vector res, S, discovered, neighbours, open;
-  int n, node;
+  int n, node, i;
+  Vector::iterator it;
 
   n = (int) graph.size();
   discovered.resize(n);
   open.resize(n);
-  for ( int i = 0; i < n; ++i ) {
+  for ( i = 0; i < n; ++i ) {
     discovered[i] = 0;
     open[i] = 0;
   }
-  Vector::iterator it;
   for( it = exclude.begin(); it != exclude.end(); ++it ) {
     discovered[*it] = 1;
   }
@@ -117,7 +121,6 @@ Vector dfs(Map graph, int root, Vector exclude = Vector() )
     node = S.back();
     if ( open[node] == 0 ) {
       neighbours = graph[node];
-      Vector::iterator it;
       for( it = neighbours.begin(); it != neighbours.end(); ++it ) {
         if ( discovered[*it] != 1 ) {
           discovered[*it] = 1;
@@ -134,12 +137,13 @@ Vector dfs(Map graph, int root, Vector exclude = Vector() )
   return res;
 }
 
-std::vector< std::vector<int> > connectedComponents(Map graph)
+std::vector< Vector > connectedComponents(Map graph)
 {
   Vector S, s_temp, discovered, assigned, exclude;
   Map graph_T;
-  std::vector< std::vector<int> > res;
+  std::vector< Vector > res;
   int n, node, k, i;
+  Vector::iterator it;
 
   n = (int) graph.size();
   discovered.resize(n);
@@ -157,9 +161,6 @@ std::vector< std::vector<int> > connectedComponents(Map graph)
       }
     }
     s_temp = dfs(graph, node);
-    puts("dfs");
-    print_vector(s_temp);
-    Vector::iterator it;
     for( it = s_temp.begin(); it != s_temp.end(); ++it ) {
       S.push_back(*it);
       discovered[*it] = 1;
@@ -179,8 +180,6 @@ std::vector< std::vector<int> > connectedComponents(Map graph)
     S.pop_back();
     if ( assigned[node] == 0 ) {
       s_temp = dfs(graph_T, node, exclude);
-      print_vector(s_temp);
-      Vector::iterator it;
       for( it = s_temp.begin(); it != s_temp.end(); ++it ) {
         assigned[*it] = 1;
         exclude.push_back(*it);
@@ -215,6 +214,7 @@ int count_edges(Map graph)
 {
   int n = 0;
   Map::iterator it;
+
   for( it = graph.begin(); it != graph.end(); ++it ) {
     n = n+ (int) (*it).second.size();
   }
@@ -226,9 +226,10 @@ void time_conn_comp(float p)
   std::vector< std::vector<int> > cc;
   Map graph;
   int n, A, t;
+  struct timeb tmb1, tmb2;
+
   puts("n A ms ms/(V+A)");
   for ( n=128; n<=5000; n = n*2 ) {
-    struct timeb tmb1, tmb2;
     graph = randomDigraph(n, p);
     A = count_edges(graph);
     ftime(&tmb1);
@@ -241,13 +242,14 @@ void time_conn_comp(float p)
 
 void n_cc_vs_n_p()
 {
-  std::vector< std::vector<int> > cc;
+  std::vector< Vector > cc;
   Map graph;
   float p;
   int n, A, n_cc, i;
+
   n = 100;
   puts("n A p n_cc");
-  for ( i = 0; i<=10; i=i+2) {
+  for ( i = 0; i<=20; i=i+1) {
     p = float(i)/n;
     graph = randomDigraph(n, p);
     A = count_edges(graph);
@@ -257,13 +259,14 @@ void n_cc_vs_n_p()
   }
 }
 
-int main( int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   if ( argc > 1 ) {
-    std::vector< std::vector<int> > cc;
+    std::vector< Vector > cc;
     Map graph;
-    char* filename = argv[1];
+    char* filename;
 
+    filename = argv[1];
     graph = read_graph(filename);
     cc = connectedComponents(graph);
     print_cc(cc);
